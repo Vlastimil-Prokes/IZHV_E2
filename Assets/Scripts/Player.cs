@@ -38,7 +38,7 @@ public class Player : MonoBehaviour
     /// Which axes should be rotated?
     /// </summary>
     public bool3 rotateAxis = new bool3(true, false, false);
-    
+
     /// <summary>
     /// Direction of rotation for each axis.
     /// </summary>
@@ -48,32 +48,32 @@ public class Player : MonoBehaviour
     /// Sprite used in the neutral state.
     /// </summary>
     public Sprite spriteNeutral;
-    
+
     /// <summary>
     /// Sprite used in the happy state.
     /// </summary>
     public Sprite spriteHappy;
-    
+
     /// <summary>
     /// Sprite used in the sad state.
     /// </summary>
     public Sprite spriteSad;
-    
+
     /// <summary>
     /// Sprite used in the pog state.
     /// </summary>
     public Sprite spritePog;
-    
+
     /// <summary>
     /// Our RigidBody used for physics simulation.
     /// </summary>
     private Rigidbody2D mRB;
-    
+
     /// <summary>
     /// Our BoxCollider used for collision detection.
     /// </summary>
     private BoxCollider2D mBC;
-    
+
     /// <summary>
     /// Sprite renderer of the child sprite GameObject.
     /// </summary>
@@ -93,12 +93,12 @@ public class Player : MonoBehaviour
     /// Remember when we switch gravity to prevent "hovering".
     /// </summary>
     private bool mSwitchedGravity = false;
-    
+
     /// <summary>
     /// Current state of gravity - 1.0 for down, -1.0f for up.
     /// </summary>
     private float mCurrentGravity = 1.0f;
-    
+
     /// <summary>
     /// Called before the first frame update.
     /// </summary>
@@ -121,14 +121,14 @@ public class Player : MonoBehaviour
         var horizontalMovement = Input.GetAxisRaw("Horizontal");
         var jumpMovement = Input.GetButtonDown("Jump");
         var onGround = IsOnGround();
-        
+
         // Reset gravity switch if we are on the ground.
         mSwitchedGravity &= !onGround;
 
         // Impart the initial impulse if we are jumping.
         if (jumpMovement && onGround)
         { mRB.velocity = -Physics2D.gravity * jumpVelocity; }
-        
+
         // Switch gravity with vertical movement.
         if (verticalMovement != 0.0 && !mSwitchedGravity)
         {
@@ -138,8 +138,8 @@ public class Player : MonoBehaviour
                 Math.Abs(Physics2D.gravity.y)
             );
             mTargetRotation = Quaternion.Euler(new float3(
-                rotateAxis.x && mCurrentGravity > 0.0f ? 180.0f : 0.0f, 
-                rotateAxis.y && mCurrentGravity > 0.0f ? 180.0f : 0.0f, 
+                rotateAxis.x && mCurrentGravity > 0.0f ? 180.0f : 0.0f,
+                rotateAxis.y && mCurrentGravity > 0.0f ? 180.0f : 0.0f,
                 rotateAxis.z && mCurrentGravity > 0.0f ? 180.0f : 0.0f
             ) * axisDirection);
             mSwitchedGravity = true;
@@ -154,8 +154,8 @@ public class Player : MonoBehaviour
     {
         // Cast our current BoxCollider in the current gravity direction.
         var hitInfo = Physics2D.BoxCast(
-            mBC.bounds.center, mBC.bounds.size, 
-            0.0f, Physics2D.gravity.normalized, groundCheckDistance, 
+            mBC.bounds.center, mBC.bounds.size,
+            0.0f, Physics2D.gravity.normalized, groundCheckDistance,
             groundLayerMask
         );
 
@@ -168,20 +168,22 @@ public class Player : MonoBehaviour
     private void FixedUpdate()
     {
         var onGround = IsOnGround();
-        
+
         if (!onGround)
         { // While in mid-air, we can rotate.
             mSpriteTransform.rotation = Quaternion.RotateTowards(
-                mSpriteTransform.rotation, mTargetRotation, 
+                mSpriteTransform.rotation, mTargetRotation,
                 rotationSpeed * Time.fixedDeltaTime
             );
+            mSpriteRenderer.sprite = spritePog;
         }
         else
         { // Snap to target rotation once on solid ground.
             mSpriteTransform.rotation = mTargetRotation;
+            mSpriteRenderer.sprite = spriteHappy;
         }
     }
-    
+
     /// <summary>
     /// Event triggered when we collide with something.
     /// </summary>
@@ -190,11 +192,11 @@ public class Player : MonoBehaviour
     {
         // Check the collided object against the layer mask.
         var hitObstacle = mBC.IsTouchingLayers(obstacleLayerMask);
-        
+
         if (hitObstacle)
         { // If we collide with any obstacle -> end the game.
             // Update the sprite.
-            mSpriteRenderer.sprite = spriteSad; 
+            mSpriteRenderer.sprite = spriteSad;
             // Move to the uncollidable layer.
             gameObject.layer = LayerMask.NameToLayer("Uncollidable");
             // Fling the obstacle out of the screen.

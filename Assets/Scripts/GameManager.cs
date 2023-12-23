@@ -12,22 +12,27 @@ public class GameManager : MonoBehaviour
     /// GameObject used for the start text.
     /// </summary>
     public GameObject startText;
-    
+
+    /// <summary>
+    /// GameObject used for the start text.
+    /// </summary>
+    public GameObject controlHint;
+
     /// <summary>
     /// GameObject used for the loss text.
     /// </summary>
     public GameObject lossText;
-    
+
     /// <summary>
     /// GameObject used for the score text.
     /// </summary>
     public GameObject scoreText;
-    
+
     /// <summary>
     /// GameObject representing the main Player character.
     /// </summary>
     public GameObject player;
-    
+
     /// <summary>
     /// GameObject representing the spawner.
     /// </summary>
@@ -52,7 +57,7 @@ public class GameManager : MonoBehaviour
     /// Singleton instance of the GameManager.
     /// </summary>
     private static GameManager sInstance;
-    
+
     /// <summary>
     /// Getter for the singleton GameManager object.
     /// </summary>
@@ -69,7 +74,7 @@ public class GameManager : MonoBehaviour
         { Destroy(gameObject); }
         else
         { sInstance = this; }
-        
+
         // Setup the game scene.
         SetupGame();
     }
@@ -88,7 +93,7 @@ public class GameManager : MonoBehaviour
         // Start the game after the first "Jump".
         if (!sGameStarted && Input.GetButtonDown("Jump"))
         { StartGame(); }
-        
+
         // Reset the game if requested.
         if (Input.GetButtonDown("Cancel"))
         { ResetGame(); }
@@ -112,10 +117,11 @@ public class GameManager : MonoBehaviour
             Math.Abs(Physics2D.gravity.x),
             Math.Abs(Physics2D.gravity.y)
         );
-        
+
         if (sGameStarted)
         { // Setup already started game -> Retry.
             startText.SetActive(false);
+            controlHint.SetActive(false);
             scoreText.SetActive(true);
             lossText.SetActive(false);
         }
@@ -123,13 +129,14 @@ public class GameManager : MonoBehaviour
         { // Setup a new game -> Wait for start.
             // Don't start spawning until we start.
             spawner.GetComponent<Spawner>().spawnObstacles = false;
-            
+
             // Setup the text.
             startText.SetActive(true);
+            controlHint.SetActive(true);
             scoreText.SetActive(false);
             lossText.SetActive(false);
         }
-        
+
         // Set the state.
         mGameLost = false;
     }
@@ -140,10 +147,10 @@ public class GameManager : MonoBehaviour
     public void StartGame()
     {
         // Reload the scene as started.
-        sGameStarted = true; 
+        sGameStarted = true;
         ResetGame();
     }
-    
+
     /// <summary>
     /// Reset the game to the default state.
     /// </summary>
@@ -169,14 +176,14 @@ public class GameManager : MonoBehaviour
         // Loose the game.
         mGameLost = true;
     }
-    
+
     /// <summary>
     /// Get child of a GameObject by name.
     /// </summary>
     /// <param name="go">Target GameObject.</param>
     /// <param name="name">Target child name.</param>
     /// <returns>Returns the child or null of no child with such name exists.</returns>
-    private static GameObject GetChildNamed(GameObject go, string name) 
+    private static GameObject GetChildNamed(GameObject go, string name)
     {
         var childTransform = go.transform.Find(name);
         return childTransform == null ? null : childTransform.gameObject;

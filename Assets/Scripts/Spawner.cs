@@ -18,23 +18,23 @@ public class Spawner : MonoBehaviour
     /// <summary>
     /// Mean frequency of spawning as n per second.
     /// </summary>
-    public float spawnFrequencyMean = 1.0f;
-    
+    public float spawnFrequencyMean = 0.5f;
+
     /// <summary>
     /// Standard deviation of the frequency of spawning as n per second.
     /// </summary>
     public float spawnFrequencyStd = 0.5f;
-    
+
     /// <summary>
     /// Position offset of the spawned obstacles.
     /// </summary>
     public float3 spawnOffset = new float3(0.0f, 0.0f, 0.0f);
-    
+
     /// <summary>
     /// Size of the spawned obstacles.
     /// </summary>
     public float spawnSize = 1.0f;
-    
+
     /// <summary>
     /// Layer used for the spawned obstacles.
     /// </summary>
@@ -56,6 +56,16 @@ public class Spawner : MonoBehaviour
     private float nextSpawnIn = 0.0f;
 
     /// <summary>
+    /// Number of spawns in same side in row.
+    /// </summary>
+    static int sameSpawnsInRow = 0;
+
+    /// <summary>
+    /// Bool value of last spawn (up or down).
+    /// </summary>
+    static bool lastSpawnUp = false;
+
+    /// <summary>
     /// Called before the first frame update.
     /// </summary>
     void Start()
@@ -64,6 +74,7 @@ public class Spawner : MonoBehaviour
     /// <summary>
     /// Update called once per frame.
     /// </summary>
+
     void Update()
     {
         if (spawnObstacles)
@@ -73,7 +84,7 @@ public class Spawner : MonoBehaviour
             { // Spawn at most one obstacle per frame.
                 spawnAccumulator -= nextSpawnIn;
                 nextSpawnIn = RandomNormal(spawnFrequencyMean, spawnFrequencyStd);
-                
+
                 SpawnObstacle();
             }
         }
@@ -89,14 +100,15 @@ public class Spawner : MonoBehaviour
 
         // Move it to the target location.
         var spawnDown = RandomBool();
-        obstacle.transform.position += (Vector3)(spawnDown ? 
-            spawnOffset + (1.0f - spawnSize) / 2.0f : 
+
+        obstacle.transform.position += (Vector3)(spawnDown ?
+            spawnOffset + (1.0f - spawnSize) / 2.0f :
             -spawnOffset - (1.0f - spawnSize) / 2.0f
         );
-        
+
         // Scale it.
         obstacle.transform.localScale = new Vector3(spawnSize, spawnSize, spawnSize);
-        
+
         // Move the obstacle into the correct layer.
         obstacle.layer = LayerMask.NameToLayer(spawnLayer);
     }
@@ -110,11 +122,11 @@ public class Spawner : MonoBehaviour
         var obstacleLayer = LayerMask.NameToLayer(spawnLayer);
         foreach (Transform child in transform)
         { // Go through all children and destroy any obstacle found.
-            if (child.gameObject.layer == obstacleLayer) 
+            if (child.gameObject.layer == obstacleLayer)
             { Destroy(child.gameObject); }
         }
     }
-    
+
     /// <summary>
     /// Reset the spawner to default state.
     /// </summary>
@@ -132,10 +144,10 @@ public class Spawner : MonoBehaviour
         // Get obstacle layer to filter with.
         var obstacleLayer = LayerMask.NameToLayer(spawnLayer);
         // Modify only the x-axis movement.
-        var xMultiplier = new Vector2(multiplier, 1.0f);
+        var xMultiplier = new Vector2(multiplier, 3.0f);
         foreach (Transform child in transform)
         { // Iterate through all children, modifying current speed of obstacles.
-            if (child.gameObject.layer == obstacleLayer) 
+            if (child.gameObject.layer == obstacleLayer)
             { child.GetComponent<Rigidbody2D>().velocity *= xMultiplier; }
         }
     }
@@ -151,16 +163,32 @@ public class Spawner : MonoBehaviour
     {
         var v1 = 1.0f - Random.value;
         var v2 = 1.0f - Random.value;
-        
+
         var standard = Math.Sqrt(-2.0f * Math.Log(v1)) * Math.Sin(2.0f * Math.PI * v2);
-        
+
         return (float)(mean + std * standard);
     }
-    
+
     /// <summary>
     /// Generate a random bool - coin flip.
+    /// Never ends 4 times same. (extension)
     /// </summary>
     /// <returns>Return a random boolean value.</returns>
     public static bool RandomBool()
-    { return Random.value >= 0.5; }
+    {
+        bool returnValue;
+
+        if (sameSpawnsInRow > 2)
+            returnValue = !lastSpawnUp;
+        else
+            returnValue = Random.value >= 0.5;
+
+        if (lastSpawnUp == returnValue)
+            sameSpawnsInRow++;
+        else
+            sameSpawnsInRow = 1;
+
+        lastSpawnUp = returnValue;
+        return returnValue;
+    }
 }
